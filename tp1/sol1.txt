@@ -1,0 +1,3 @@
+Optimal - objective value -850.00000000
+      0 ce                    30                     -7
+      1 cs                    50                      0
