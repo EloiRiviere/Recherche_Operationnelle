@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import objects.Noeud;
+import lireinstancevrp.LireInstanceVrp;
 
 public class Code
 {
@@ -15,14 +16,73 @@ public class Code
   static Noeud[] liste_noeuds;
   static int nombre_noeuds;
   static int nombre_arcs;
+  static Double[][] tableau_distance;
+
+  static int demande[]={15,24,30,8,12,18,27,5,42,13,20,6,21,13,19};
+  static int nbClient=15;
+  static int capacite=10000;
+  static int depot = 0;
+
+  static List<List<Integer>> solution;
 
 
   public static void main(final String[] args)
   {
-    Double[][] tableau_distances = tp2_partie1(args[0]);
-    afficher_tableau_distances(tableau_distances);
-    int clients[][] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{15,24,30,8,12,18,27,5,42,13,20,6,21,13,19}};
+    tableau_distance = tp2_partie1(args[0]);
+    tableau_distance[0][0] = 0.0;
+	afficher_tableau_distances(tableau_distance);
+
+	int clients[][] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{15,24,30,8,12,18,27,5,42,13,20,6,21,13,19}};
     afficher_tableau_clients(clients);
+
+    try
+    {
+      Runtime rt = Runtime.getRuntime();
+      rt.exec("java lireinstancevrp.LireInstanceVrp E-n101-k14.vrp.txt la_grande");
+    }
+    catch(Exception e)
+    {
+      
+    }
+
+    solution = new ArrayList<>();
+    List<Integer> tournee1 = new ArrayList<>();
+	tournee1.add(1);
+	tournee1.add(2);
+	tournee1.add(3);
+
+	solution.add(tournee1);
+
+    System.out.println(cout(tournee1));
+    System.out.println(isValideTournee(tournee1));
+    System.out.println(isValideSolution(solution));
+  }
+
+  public static Double cout(List<Integer> tournee)
+  {
+  	Double total = tableau_distance[depot][tournee.get(0)] + tableau_distance[tournee.get(tournee.size()-1)][depot];
+
+  	for(int i = 0; i<tournee.size()-1; i++)
+  	{
+  		total += tableau_distance[tournee.get(i)][tournee.get(i+1)];
+  	}
+  	return total;
+  }
+
+  public static boolean isValideTournee(List<Integer> tournee)
+  {
+  	if(cout(tournee) <= capacite) return true;
+  	return false;
+  }
+
+  public static boolean isValideSolution(List<List<Integer>> solution)
+  {
+  	// vérifier si tous les clients sont présents et 1 seule fois
+  	for(List<Integer> tournee : solution)
+  	{
+  		if(!isValideTournee(tournee)) return false;
+  	}
+  	return true;
   }
 
   public static Double[][] tp2_partie1(String fichier)
