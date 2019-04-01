@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import objects.Noeud;
 import lireinstancevrp.LireInstanceVrp;
@@ -20,70 +21,155 @@ public class Code
 
   static int demande[]={15,24,30,8,12,18,27,5,42,13,20,6,21,13,19};
   static int nbClient=15;
-  static int capacite=10000;
+  static int capacite=100;
   static int depot = 0;
+  static int clients[][] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{15,24,30,8,12,18,27,5,42,13,20,6,21,13,19}};
 
-  static List<List<Integer>> solution;
-
+  static List<List<Integer>> solution = new ArrayList<>();
 
   public static void main(final String[] args)
   {
     tableau_distance = tp2_partie1(args[0]);
     tableau_distance[0][0] = 0.0;
-	afficher_tableau_distances(tableau_distance);
+	  afficher_tableau_distances(tableau_distance);
 
-	int clients[][] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{15,24,30,8,12,18,27,5,42,13,20,6,21,13,19}};
-    afficher_tableau_clients(clients);
-
+    System.out.println("\nLecture du fichier 'E-n101-k14.vrp.txt' et création du fichier 'la_grande'");
     try
     {
       Runtime rt = Runtime.getRuntime();
       rt.exec("java lireinstancevrp.LireInstanceVrp E-n101-k14.vrp.txt la_grande");
     }
-    catch(Exception e)
+    catch(Exception e){}
+
+    afficher_tableau_clients(clients);
+
+    creation_solution();
+    affichage_solution();
+    affichage_validation2();
+
+  }
+
+  public static void creation_solution()
+  {
+    List<Integer> tournee = new ArrayList<>();
+    tournee.add(depot+1);
+    int total = demande[depot];
+    for(int index = 1; index < nbClient; index++)
     {
-      
+      if((total + demande[index] + demande[0]) > capacite)
+      {
+        tournee.add(depot+1);
+        total = total + demande[depot];
+        solution.add(tournee);
+
+        tournee = new ArrayList<>();
+        tournee.add(depot+1);
+        total = demande[depot];
+      }
+      tournee.add(index+1);
+      total = total + demande[index];
     }
-
-    solution = new ArrayList<>();
-    List<Integer> tournee1 = new ArrayList<>();
-	tournee1.add(1);
-	tournee1.add(2);
-	tournee1.add(3);
-
-	solution.add(tournee1);
-
-    System.out.println(cout(tournee1));
-    System.out.println(isValideTournee(tournee1));
-    System.out.println(isValideSolution(solution));
+    tournee.add(depot+1);
+    total = total + demande[depot];
+    solution.add(tournee);
   }
 
-  public static Double cout(List<Integer> tournee)
+  public static void affichage_solution()
   {
-  	Double total = tableau_distance[depot][tournee.get(0)] + tableau_distance[tournee.get(tournee.size()-1)][depot];
+    System.out.println("\nSolution:\n");
+    // System.out.println(solution);
 
-  	for(int i = 0; i<tournee.size()-1; i++)
-  	{
-  		total += tableau_distance[tournee.get(i)][tournee.get(i+1)];
-  	}
-  	return total;
+    for( int i = 0; i < solution.size(); i++)
+    {
+      System.out.println("Tournée " + (i+1) + ":");
+      System.out.print("\t");
+      for(int j = 0; j < solution.get(i).size(); j++)
+      {
+        System.out.print("\t->\t" + solution.get(i).get(j));
+      }
+      System.out.print("\n");
+    }
+    System.out.print("\n");
   }
 
-  public static boolean isValideTournee(List<Integer> tournee)
+  public static void affichage_validation2()
   {
-  	if(cout(tournee) <= capacite) return true;
+    if(isValideSolution2())
+    {
+      System.out.println("La solution est valide !");
+      return;
+    }
+    System.out.println("La solution n'est pas valide !");
+  }
+
+  public static int cout2(List<Integer> tournee)
+  {
+    int total = 0;
+
+    for(int i = 0; i<tournee.size()-1; i++)
+    {
+      total += clients[1][i];
+    }
+    return total;
+  }
+
+  public static boolean isValideTournee2(List<Integer> tournee)
+  {
+    if(cout2(tournee) <= capacite) return true;
   	return false;
   }
 
-  public static boolean isValideSolution(List<List<Integer>> solution)
+  public static boolean isValideSolution2()
   {
-  	// vérifier si tous les clients sont présents et 1 seule fois
-  	for(List<Integer> tournee : solution)
-  	{
-  		if(!isValideTournee(tournee)) return false;
-  	}
-  	return true;
+    // on vérifie le coût ne soit pas dépassé
+    for(List<Integer> tournee : solution)
+    {
+      if(!isValideTournee2(tournee)) return false;
+    }
+    // on vérifie que chacun des clients ne soit présent qu'une fois (sans compter le dépôt)
+    List<Integer> cl = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15));
+    cl.remove(0);
+    for(List<Integer> tournee : solution)
+    {
+      for(int i : tournee)
+      {
+        if(i != 1)
+        {
+          /*System.out.println("Suppression de " + i + " : " + */cl.remove(new Integer(i))/*)*/;
+        }
+      }
+    }
+    if(cl.isEmpty()) return true;
+    return false;
   }
+
+  // public static Double cout(List<Integer> tournee)
+  // {
+  // 	Double total = tableau_distance[depot][tournee.get(0)] + tableau_distance[tournee.get(tournee.size()-1)][depot];
+  //
+  // 	for(int i = 0; i<tournee.size()-1; i++)
+  // 	{
+  // 		total += tableau_distance[tournee.get(i)][tournee.get(i+1)];
+  // 	}
+  // 	return total;
+  // }
+  //
+  // public static boolean isValideTournee(List<Integer> tournee)
+  // {
+  // 	if(cout(tournee) <= capacite) return true;
+  // 	return false;
+  // }
+  //
+  // public static boolean isValideSolution(List<List<Integer>> solution)
+  // {
+  // 	// vérifier si tous les clients sont présents et 1 seule fois
+  // 	for(List<Integer> tournee : solution)
+  // 	{
+  // 		if(!isValideTournee(tournee)) return false;
+  // 	}
+  // 	return true;
+  // }
+  //
 
   public static Double[][] tp2_partie1(String fichier)
   {
